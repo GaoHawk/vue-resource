@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style>
+      html,body{
+         margin:0;
+         height: 100%;
+      }
+      body{
+        background: url(back.png) no-repeat;
+        background-size: cover;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div id="app" class="text-center">
+      <img src="" alt="">
+      <h3 style="padding-top: 100%;line-height: 45px;font-size: 19px;">水果湖派出所</h3>
+      <h3 style="font-size: 18px;">警员指挥调动平台</h3>
+      <div class="container">
+          <div class="form-group" style="margin-left: 3px;">
+            <label>账号</label>
+            <input type="text" v-model="loginModel.username" placeholder="手机号或者警号" />
+          </div>
+          <div class="form-group" style="margin-left:3px;">
+            <label>密码</label>
+            <input type="text" v-model="loginModel.password" placeholder="请输入密码" />
+          </div>
+          <div class="form-group">
+            <label></label>
+            <button @click="login">登录</button>
+          </div>
+      </div>
+    </div>
+
+  </body>
+  <script src="js/vue.js"></script>
+  <script src="js/vue-resource.js"></script>
+
+  <script>
+    Vue.http.options.emulateJSON = true
+    Vue.http.options.root = 'http://211.149.193.19:8100'
+
+    var demo = new Vue({
+      el: '#app',
+      data: {
+        loginUrl: 'http://211.149.193.19:8080/api/customers',
+        logoutUrl: 'api/Account/Logout',
+        loginModel: {
+          userame: '',
+          password: '',
+          grant_type: 'password'
+        },
+        msg: '',
+        userName: ''
+      },
+
+      ready: function() {
+        this.userName = sessionStorage.getItem('userName')
+      },
+      methods: {
+        login: function() {
+
+          this.$http.jsonp(this.loginUrl).then(function(response){
+                        console.log("登陆成功");
+                        location.href = "takePosition.html";
+                      }),(function(response){
+                         console.log("err");
+                      }).catch(function(response) {
+                          console.log(response)
+                      })
+        },
+        requestError: function(response) {
+          this.msg = response.json()
+        }
+      }
+    })
+  </script>
+
+</html>
