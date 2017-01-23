@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>自定义图标</title>
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+    <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=4939f20cc60ba84508d5c3e94969d549"></script>
+    <script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+</head>
+<body>
+<div id="container"></div>
+<div class="button-group">
+    <input type="button" class="button" value="从多个点中删除指定点" id="clearMarker"/>
+  </div>
+<script type="text/javascript">
+    //初始化地图对象，加载地图
+    var map = new AMap.Map("container", {
+        resizeEnable: true,
+        center: [116.397428, 39.90923],//地图中心点
+        zoom: 13 //地图显示的缩放级别
+    });
+    var markers = [], positions = [[116.405467, 39.907761], [116.415467, 39.907761], [116.415467, 39.917761], [116.425467, 39.907761], [116.385467, 39.907761]];
+
+    for (var i = 0, marker; i < positions.length; i++) {
+         marker = new AMap.Marker({
+             map: map,
+             icon: 'http://webapi.amap.com/theme/v1.3/markers/n/mark_b'+(i+1)+'.png',
+             position: positions[i]
+         });
+         marker.setLabel({//label默认蓝框白底左上角显示，样式className为：amap-marker-label
+             offset: new AMap.Pixel(10, -25),//修改label相对于maker的位置
+             content: "李警官"
+         });
+         markers.push(marker);
+     }
+    //添加点标记，并使用自己的icon
+    // var marker = new AMap.Marker({
+    //     map: map,
+    //     position: [116.405467, 39.907761],
+    //     icon: new AMap.Icon({
+    //         size: new AMap.Size(40, 50),  //图标大小
+    //         image: "http://webapi.amap.com/theme/v1.3/images/newpc/way_btn2.png",
+    //         imageOffset: new AMap.Pixel(0, -60)
+    //     })
+    // });
+    // marker.setLabel({//label默认蓝框白底左上角显示，样式className为：amap-marker-label
+    //     offset: new AMap.Pixel(10, -25),//修改label相对于maker的位置
+    //     content: "李警官"
+    // });
+    AMap.event.addDomListener(document.getElementById('clearMarker'), 'click', function() {
+        var markerS = document.querySelectorAll(".amap-marker");
+        console.log(markerS)
+        var show = "display:block;"
+        var hide = "display:none;";
+        var attr = markerS[0].getAttribute("style");
+        var styleArr = attr.split(";");
+        console.log(styleArr);
+        var origDis = styleArr.splice(styleArr.length-2,1);
+        var str = '';
+        console.log(origDis[0].split(":")[1].trim())
+        console.log(origDis[0].split(":")[1].trim() == "block");
+        if(origDis[0].split(":")[1].trim() == "block"){
+            console.log("hide")
+            str = styleArr.join(";") + hide;
+        }else{
+           console.log("show");
+           str = styleArr.join(";") + show;
+        }
+        console.log(styleArr.join(";")+ show);
+        markerS[0].setAttribute("style",str);
+    }, false);
+</script>
+</body>
+</html>

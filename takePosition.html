@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
@@ -27,6 +27,8 @@
           }
           body{
              font-family: "Microsoft YaHei";
+             overflow: hidden;
+             text-align: center;
           }
           #container {
             margin:4px;
@@ -85,7 +87,7 @@
               background: rgba(153,153,153,0.54);
           }
           .amap-zoomcontrol{
-             bottom:-44px!important;
+             bottom:12px!important;
           }
           .amap-lib-driving{
             display: none;
@@ -176,23 +178,42 @@
     <body>
     <div id="container" style="height:100%;"></div>
     <div id="panel"></div>
-    <div id="showDet" class="count_div">
-         <div  v-bind:style="styleObjTop"><span style="background:url(images/main/GPS.png) no-repeat; display:inline-block;width: 16px;height: 11px;background-size: contain;"></span>建议开启GPS定位以获取更准确的数据 </div>
-      <template v-if="first">
-       <div class="c_head" v-if="count"><img class="countING" src="images/LakeRoad/count.png" >计数中...</div>
-       <div class="c_head" v-else><img class="countDown" src="images/LakeRoad/countdown.png">完成计数</div>
-       <div class="content" v-bind:class="{ 'active': isA }">
-        <span>时间<br> <span style="margin-left: 8px;">{{ time }}</span> </span>
-        <span>里程<br> <span style="margin-left:6px;">{{ total }}</span> </span>
-        <span>绿道内<br> <span>{{ inside }}</span> </span>
-       </div>
-       <div class="hint" v-bind:style="styleObj" transition="bounce" v-show="show"> {{ hint }} </div>
+    <div id="app">
+      <div id="showDet" class="count_div">
+           <div  v-bind:style="styleObjTop"><span style="background:url(images/main/GPS.png) no-repeat; display:inline-block;width: 16px;height: 11px;background-size: contain;"></span>建议开启GPS定位以获取更准确的数据 </div>
 
-      </template>
+      </div>
+      <div class="hint" v-bind:style="styleObj" transition="bounce" v-show="show"> {{ hint }} </div>
+      <down-component></down-component>
+      <switch-component></switch-component>
+      <my-component></my-component>
+      <reset-component></reset-component>
     </div>
+    <template id="download">
+        <a :style="arrowStyle"><span class="mui-icon mui-icon-arrowthindown" style="font-weight: 600;"></span></a>
+    </template>
+    <template id="switch">
+      <div :style="s_obj">位置共享</div>
+      <div v-bind:style="switchObj">
 
-    <button id="btn" type="button" class="mui-btn mui-btn-block" v-bind:style="styleObject" v-on:click="down">
-    {{ text }} </button>
+        <div class="mui-switch mui-switch-blue mui-active" @click="startLoop">
+          <div class="mui-switch-handle"></div>
+        </div>
+      </div>
+    </template>
+    <template id="btn">
+    <form class="mui-input-group" v-bind:style="inputObject">
+      <div class="mui-input-row" v-bind:style="formDiv">
+        <label style="color:#a6a6a6;font-size: 13px;">当前位置:</label>
+        <input type="text" placeholder="当前所处位置" style="font-size: 13px;height:33px;">
+      </div>
+    </form>
+    <input  type="button" value="上报位置信息" v-bind:style="styleObject" v-on:click="down">
+
+    </template>
+    <template id="reset">
+        <a :style="resetStyle" @click="reset"><span class="mui-icon mui-icon-refresh"></span></a>
+    </template>
     </body>
     <script>
        var startPoint,currentPoint; //  起始位置，当前位置
@@ -208,33 +229,33 @@
             start = new Date(); // 启动计数后的当前时间之后的开始时间。
             before = start;
        })
-      function renderLoop(){
-         var now = new Date();
-         var diff = now - before;
-         var countTime = now - start;
-         if(diff >= 1000){
-           console.log(diff);
-           before = now;
-           var showTime = new Date();
-           showTime.setTime(countTime + 3600000*16);
-           var showStr = showTime.Format("hh:mm:ss");
-           console.log(showStr);
-          // var sec = countTime.getSeconds();
-           console.log(countTime);
-           vm1.time = showStr;
-         }
-         if(countTime%15000 < 10 && flag){
-            a++;
-            flag = false;
-            console.log(a);
-            console.log(countTime);
-            geolocation.getCurrentPosition();
-         }else if(countTime%15000 >=1000){
-            flag = true;
-         }
+      // function renderLoop(){
+      //    var now = new Date();
+      //    var diff = now - before;
+      //    var countTime = now - start;
+      //    if(diff >= 1000){
+      //      console.log(diff);
+      //      before = now;
+      //      var showTime = new Date();
+      //      showTime.setTime(countTime + 3600000*16);
+      //      var showStr = showTime.Format("hh:mm:ss");
+      //      console.log(showStr);
+      //     // var sec = countTime.getSeconds();
+      //      console.log(countTime);
+      //      vm1.time = showStr;
+      //    }
+      //    if(countTime%15000 < 10 && flag){
+      //       a++;
+      //       flag = false;
+      //       console.log(a);
+      //       console.log(countTime);
+      //       geolocation.getCurrentPosition();
+      //    }else if(countTime%15000 >=1000){
+      //       flag = true;
+      //    }
 
-         handle = requestAnimationFrame(renderLoop);
-      }
+      //    handle = requestAnimationFrame(renderLoop);
+      // }
 
     </script>
     <!-- 计数提示代码 -->
@@ -243,70 +264,22 @@
     </script>
     <!-- 高德地图代码 -->
     <script>
-    function checkMarker(point){
-      console.log('点是否在多边形内：' + polygon.contains(point));
-      return polygon.contains(point);
-    }
 
-    function getDistance(startPoint,curPoint){
-        //根据起终点坐标规划步行路线
-        console.log('startSearch');
-        console.log(startPoint);
-        console.log(curPoint);
-        var lnglat = new AMap.LngLat(startPoint[0],startPoint[1]);
-        var distance = lnglat.distance(curPoint);// 当前里程长度
-        // 2次定位 距离差距
-        var diffDis = Math.abs(distance - totalDis);
-        console.log(diffDis);
-        if(diffDis > 300){
-          return;
-        }
-        // 将这次的移动距离存入，算作下次计算的上次移动距离
-        totalDis = distance;
-        console.log(Math.round(distance)/1000);
-        // 只有在绿道内才 累加急速绿道里程
-        if(insideBl[0]&&insideBl[1]){
-            insideDis += diffDis;
-            console.log(insideDis);
-            vm1.inside = (insideDis/1000).toFixed(2) + 'km';
-        }else{
-            outsideDis += diffDis;
-        }
-        if(distance <= 10){
-           return;
-        }
-        vm1.total = Math.round(outsideDis)/1000 + 'km';
-        riding.search(startPoint,curPoint);
-        console.log('end');
-    }
     //解析定位结果
     function onComplete(data) {
         var str=['定位成功'];
         str.push('经度：' + data.position.getLng());
         str.push('纬度：' + data.position.getLat());
-        if(a < 1){
-          console.log('s');
-           startPoint = [data.position.getLng(),data.position.getLat()];
-           console.log(startPoint);
-           var sB = checkMarker(startPoint);
-           // console.log(sB);
-           insideBl[0] = sB;
-        }else{
-            console.log('c');
-           currentPoint = [data.position.getLng(),data.position.getLat()];
-           console.log(currentPoint);
-           var cB = checkMarker(currentPoint);
-           // console.log(cB);
-           if(a < 2){
-              insideBl[1] = cB;
-           }else{
-              insideBl[0] = insideBl[1];
-              insideBl[1] = cB;
-           }
-           getDistance(startPoint,currentPoint);
-           console.log(insideBl);
-        }
-        console.log(str.join(','));
+        var lng = data.position.getLng()
+        var lat = data.position.getLat()
+        console.log(str);
+        // 设置缩放级别和中心点
+        map.setZoomAndCenter(14, [lng,lat ]);
+        // 在新中心点添加 marker
+        var marker = new AMap.Marker({
+            map: map,
+            position: [lng, lat]
+        });
     }
 
     //解析定位错误信息
@@ -317,7 +290,7 @@
     var map = new AMap.Map('container', {
          resizeEnable:true,
          center: [114.396568,30.544318],
-         zoom: 19
+         zoom: 11
      });
 
     map.plugin('AMap.Geolocation',function() {
@@ -332,72 +305,166 @@
         AMap.event.addListener(geolocation,'error',onError);
     });
 
-    //步行导航
-    var riding = new AMap.Riding({
-        map: map,
-        panel: "panel"
-    });
-     var lineArr = [
-         [114.438476,30.567051],
-         [114.436416,30.572815],
-         [114.435214,30.577693],
-         [114.433326,30.586412]
-     ];
-     var path = [
-         [114.380068,30.58369],
-         [114.376206,30.580956],
-         [114.367537,30.540898],
-         [114.370541,30.531435],
-         [114.416718,30.533357],
-         [114.431309,30.541563],
-         [114.446244,30.551912],
-         [114.440751,30.562407],
-         [114.432854,30.579109],
-         [114.416289,30.582434],
-         [114.405217,30.579256],
-         [114.397578,30.579478],
-         [114.389681,30.585242]
-
-     ];
-     var polygon = new AMap.Polygon({
-         map: map,
-         path: path,
-         strokeOpacity:0,
-         fillOpacity:0.2
-     });
-
-     // if(mE && mS){
-     //    var distance = tRoad;
-     //    console.log('绿道内' + distance+'米');
-     // }
-     //  实时折线图
-     // var polyline = new AMap.Polyline({
-     //     path: lineArr,          //设置线覆盖物路径
-     //     strokeColor: "#3366FF", //线颜色
-     //     strokeOpacity: 1,       //线透明度
-     //     strokeWeight: 5,        //线宽
-     //     strokeStyle: "solid",   //线样式
-     //     strokeDasharray: [10, 5] //补充线样式
-     // });
-     // polyline.setMap(map);
      map.setFitView();
 
     </script>
     <!-- vue代码 -->
     <script>
+    var st;//定时器
+    function getCurrentPos(){
+          geolocation.getCurrentPosition();
+    }
+    var _reset = Vue.extend({
+        template:'#reset',
+        data:function(){
+            return {
+               resetStyle:{
+                   position:'fixed',
+                   bottom:'77px',
+                   right:'16px',
+                   color:'black',
+                   background:'white'
+               }
+            }
+        },
+        methods:{
+            reset:function(){
+                app.show = !app.show;
+                setTimeout(function(){
+                   app.show = false;
+                },5500);
+                app.hint="正在重新获取你的位置,请稍等..."
+                geolocation.getCurrentPosition();
+            }
+        }
+    })
+    var download = Vue.extend({
+        template:'#download',
+        data:function(){
+            return {
+               arrowStyle:{
+                   position:'fixed',
+                   borderRadius:'50%',
+                   border:'1px solid black',
+                   right:'22px',
+                   top:'42px',
+                   color:'black',
+                   zIndex:1000
+               }
+            }
+        }
+    })
+    var sw_comp = Vue.extend({
+         template:'#switch',
+         data:function(){
+             return {
+                switchObj:{
+                   position:'fixed',
+                   bottom:'68px',
+                   left:'42px',
+                   transform:'scale(0.58,0.68)'
+                },
+                s_obj:{
+                  position:'fixed',
+                  fontSize:'13px',
+                  textAlign:'left',
+                  height:'29px',
+                  width:'62px',
+                  left:'4px',
+                  bottom:'64px',
+                  background:'white'
+                }
+             }
+         },
+         methods:{
+              startLoop:function(event){
+                 var sw = document.querySelector("div.mui-switch-blue");
+                 var classname = sw.className.split(" ");
+                 console.log(classname);
 
-    var vm1 = new Vue({
-        el:"#showDet",
+                 if(classname.length>2){
+                     console.log("start loop");
+                     st = setInterval("getCurrentPos()",60000);
+                 }else{
+                     console.log("stop");
+                     window.clearInterval(st);
+                 }
+
+                // geolocation.getCurrentPosition();
+
+              }
+         }
+    });
+    var vm2 = Vue.extend({
+         template:"#btn",
+         data:function(){
+            return{
+              styleObject:{
+                 position:'fixed',
+                 bottom:'1px',
+                 borderRadius:'35px',
+                 padding:'7px 13px',
+                 right:'32.5%',
+                 zIndex:1000,
+                 color:'#333'
+              },
+              inputObject:{
+                position:'fixed',
+                bottom:'37px',
+                height:'33px',
+                left:'8%',
+                zIndex:1000,
+                width:'85%'
+              },
+
+              done:true,
+              text:'开始计数'
+            }
+         },
+         methods:{
+              down:function(event){
+                console.log(app.show);
+                app.show = !app.show;
+                setTimeout(function(){
+                   app.show = false;
+                },5500);
+                geolocation.getCurrentPosition();
+
+              }
+         },
+         component: {
+
+         }
+    })
+    // var Child = Vue.extend({
+    //        template: '<p>This is a child component!</p>'
+    //    })
+
+    //  var Parent = Vue.extend({
+    //      // 在Parent组件内使用<child-component>标签
+    //      template :'<p>This is a Parent component</p><child-component></child-component>',
+    //      components: {
+    //          // 局部注册Child组件，该组件只能在Parent组件内使用
+    //          'child-component': Child
+    //      }
+    //  })
+    // Vue.component('parent-component',Parent);
+    Vue.component('my-component',vm2);
+    Vue.component('switch-component',sw_comp);
+    Vue.component('down-component',download);
+    Vue.component('reset-component',_reset);
+    var app = new Vue({
+        el:"#app",
         data:{
            count:false,
            time:'00:00:00',
            total:'0.00km',
            inside:'0.00km',
            isA: false, //启动计数 和完成计数样式变化
-           hint:'温馨提示:请打开gps,计算才能更准确',
+           hint:'温馨提示:正在获取你当前位置，请稍等...',
            styleObj:{
                position:'absolute',
-               top:'164%',
+               top:'46%',
                left:'5%',
                padding:'9px',
                textAlign:'center',
@@ -422,55 +489,7 @@
            show:false //提示显示切换
         }
     });
-    var vm2 = new Vue({
-         el:"#btn",
-         data:{
-             styleObject:{
-                position:'absolute',
-                top:'91%',
-                background:'#63c961',
-                zIndex:1000,
-                color:'white'
-             },
-             done:true,
-             text:'开始计数'
-         },
-         methods:{
-              down:function(event){
-                  console.log('changeCount');
-                  console.log(start);
-                  vm1.show = !vm1.show;
-                  vm1.first = true;
-                  setTimeout(function(){
-                     vm1.show = false;
-                  },5500);
-                  if(this.done){
-                    a = -1;
-                    vm1.total = '0.00km';
-                    vm1.inside = '0.00km';
-                    vm1.count = true;
-                    vm1.isA = false;
-                    geolocation.getCurrentPosition();
-                    renderLoop();
-                    vm1.hint = '温馨提示:不在绿道内行走的里程将不计入';
-                    this.text = '完成计数';
-                    this.done = false;
-                  }else{
-                    cancelAnimationFrame(handle);
-                    var insideMil = parseFloat(vm1.inside).toFixed(2);
-                    var totalMil = parseFloat(vm1.total).toFixed(2);
-                    vm1.hint = '本次计入里程 ' + insideMil + ' km';
-                    postResult(insideMil,totalMil);
-                    console.log("post");
-                    this.text ='开始计数';
-                    vm1.isA = true;
-                    vm1.count = false;
-                    this.done = true;
-                  }
-              }
 
-         }
-    })
     function postResult(Mil,tMil){
       console.log("result");
         $.ajax({

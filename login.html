@@ -18,6 +18,16 @@
         background-size: cover;
       }
     </style>
+    <!-- 判断是否已经登陆过，登陆直接跳转 -->
+    <script>
+      function logIn(){
+        if(localStorage.loginMes){
+          console.log(JSON.parse(localStorage.loginMes));
+          // location.href = "takePosition.html";
+        }
+      }
+      logIn();
+    </script>
   </head>
 
   <body>
@@ -26,10 +36,11 @@
       <img src="" alt="">
       <h3 style="padding-top: 100%;line-height: 45px;font-size: 19px;">水果湖派出所</h3>
       <h3 style="font-size: 18px;">警员指挥调动平台</h3>
+      <div style="color:red;width: 90%;position: fixed;bottom: 157px;"> {{ msg }} </div>
       <div class="container">
           <div class="form-group" style="margin-left: 3px;">
             <label>账号</label>
-            <input type="text" v-model="loginModel.username" placeholder="手机号或者警号" />
+            <input type="text" v-model="loginModel.phone" placeholder="手机号或者警号" />
           </div>
           <div class="form-group" style="margin-left:3px;">
             <label>密码</label>
@@ -53,10 +64,10 @@
     var demo = new Vue({
       el: '#app',
       data: {
-        loginUrl: 'http://211.149.193.19:8080/api/customers',
+        loginUrl: '/userlogin',
         logoutUrl: 'api/Account/Logout',
         loginModel: {
-          userame: '',
+          phone: '',
           password: '',
           grant_type: 'password'
         },
@@ -69,15 +80,22 @@
       },
       methods: {
         login: function() {
-
-          this.$http.jsonp(this.loginUrl).then(function(response){
-                        console.log("登陆成功");
-                        location.href = "takePosition.html";
-                      }),(function(response){
-                         console.log("err");
-                      }).catch(function(response) {
-                          console.log(response)
-                      })
+          if(!this.loginModel.phone || !this.loginModel.password){
+              console.log("err");
+              this.msg = "账号或密码不能为空";
+              return;
+          }else{
+              console.log("eee");
+              this.msg ='';
+          }
+          this.$http.post(this.loginUrl,this.loginModel).then(function(response){
+              console.log("登陆成功");
+              window.localStorage.loginMes = JSON.stringify(this.loginModel);
+              console.log(localStorage);
+              location.href = "takePosition.html";
+            }),(function(response){
+               console.log("err");
+            })
         },
         requestError: function(response) {
           this.msg = response.json()
